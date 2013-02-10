@@ -1,0 +1,425 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>My Address Book</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Address Book Application for Digital Pulp">
+    <meta name="author" content="Mike Heavers">
+    <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+    <script type="text/javascript"> <!-- Local Fallback -->
+      if (typeof jQuery == 'undefined') {
+        document.write(unescape("%3Cscript src='js/jquery-1.9.1.min.js' type='text/javascript'%3E%3C/script%3E"));
+      }
+    </script>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet/less" type="text/css" href="css/address_book.less" />
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+    <![endif]-->
+    <script src="js/less-1.3.3.min.js" type="text/javascript"></script>
+  </head>
+
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">My Address Book</a>
+          <form class="navbar-form pull-right">
+            <input id="searchAddressInput" type="text" class="span2">
+            <button type="submit" class="btn">Search</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="addressContainer" class="container">
+      <div id="addressRecords">
+        <div class="address_record clearfix">
+          <a class="icon_minus">-</a>
+          <button type="button" class="btn btn-primary edit">Edit</button>
+          <h3 class="address_name">Digital Pulp</h3>
+          <div class="span4">
+            <dl class="dl-horizontal">
+              <dt>Main</dt>
+              <dd>
+                <address>
+                  <strong>220 E 23rd Street</strong><br>
+                  Suite 900<br>
+                  New York, NY 10010<br>
+                  United States
+                </address>
+              </dd>
+            </dl>
+            <dl class="dl-horizontal">
+              <dt>Direct</dt>
+              <dd>
+                212 679 0676 x235
+              </dd>
+            </dl>
+            <dl class="dl-horizontal">
+              <dt>Fax</dt>
+              <dd>
+                212 679 0767
+              </dd>
+            </dl>
+          </div>
+          <div class="span8">
+            <dl class="dl-horizontal">
+              <dt>Work</dt>
+              <dd>
+                <a href="mailto:jobs@digitalpulp.com">jobs@digitalpulp.com</a>
+              </dd>
+            </dl>
+            <dl class="dl-horizontal">
+              <dt>Main</dt>
+              <dd>
+                <a href="http://digitalpulp.com">http://digitalpulp.com</a>
+              </dd>
+            </dl>
+            <dl class="dl-horizontal">
+              <dt>Clients Site</dt>
+              <dd>
+                <a href="http://digitalpulp.com/clients/">http://digitalpulp.com/clients/</a>
+              </dd>
+            </dl>
+          </div>
+        </div> <!-- /address_record -->
+        <div class="address_record clearfix">
+          <a class="icon_minus">-</a>
+          <button type="button" class="btn btn-primary edit">Edit</button>
+          <h3 class="address_name">Justin Blecher</h3>
+          <div class="span4">
+            <dl class="dl-horizontal">
+              <dt>Main</dt>
+              <dd>
+                <address>
+                  <strong>33 W 23rd St. #1900</strong><br>
+                  Old York, NY 10016<br>
+                  United States
+                </address>
+              </dd>
+            </dl>
+            <dl class="dl-horizontal">
+              <dt>Cell</dt>
+              <dd>
+                646 679 0676
+              </dd>
+            </dl>
+          </div>
+          <div class="span8">
+            <dl class="dl-horizontal">
+              <dt>Work</dt>
+              <dd>
+                <a href="mailto:jobs@digitalpulp.com">jobs@digitalpulp.com</a>
+              </dd>
+            </dl>
+            <dl class="dl-horizontal">
+              <dt>Main</dt>
+              <dd>
+                <a href="http://digitalpulp.com">http://digitalpulp.com</a>
+              </dd>
+            </dl>
+            <dl class="dl-horizontal">
+              <dt>Clients Site</dt>
+              <dd>
+                <a href="http://digitalpulp.com/clients/">http://digitalpulp.com/clients/</a>
+              </dd>
+            </dl>
+          </div>
+        </div> <!-- /address_record -->
+      </div><!-- /addressRecords-->
+      
+      <div class="pagination">
+        <button id="new_entry" class="new_entry btn btn-large" type="button">New Entry</button>
+        <ul class="pages">
+          <li class="disabled"><a href="#">Prev</a></li>
+          <li class="active"><a href="#">1</a></li>
+          <li><a href="#">2</a></li>
+          <li><a href="#">3</a></li>
+          <li><a href="#">4</a></li>
+          <li><a href="#">5</a></li>
+          <li><a href="#">Next</a></li>
+        </ul>
+      </div> <!-- /pagination -->
+
+      <div id="confirmRemoval" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="confirmRemovalLabel" aria-hidden="true">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="confirmRemovalLabel">Confirm Removal</h3>
+        </div>
+        <div class="modal-body">
+          <p>You are about to permanently delete this address from your address book. These changes cannot be undone. To confirm, click the "remove record" below, otherwise hit "Cancel".</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+          <button id="removeRecordConfirmed" class="btn btn-primary">Remove Record</button>
+        </div>
+      </div>
+
+      <div id="modalAddEntry" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modalAddEntryLabel" aria-hidden="true">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="modalAddEntryLabel">Add Entry</h3>
+        </div>
+        <div class="modal-body">
+          <p>Fill out the form below to add an address to your address book.</p>
+          <div id="new_address_form_container">
+            <form class="form-horizontal">
+              <div class="control-group">
+                <label class="control-label" for="entry-name">Name</label>
+                <div class="controls">
+                  <input type="text" id="entry-name" name="entry-name" placeholder="Ex: Tom Jones">
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="entry-address">Address</label>
+                <div class="controls">
+                  <input type="text" id="entry-address" name="entry-address" placeholder="Ex: 100 Main St New York, NY">
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="entry-phone">Phone</label>
+                <div class="controls">
+                  <input type="text" id="entry-phone" name="entry-phone" placeholder="Ex: 555 555 5555">
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+          <button id="addEntryConfirmed" class="btn btn-primary">Add</button>
+        </div>
+      </div>
+
+    </div> <!-- /addressContainer -->
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+
+    var $activeRecord; //will hold the reference to the address book record being interacted with
+
+    //DOM REFERENCES (TO BE SET ON DOCUMENT READY)
+    var $removeRecordConfirmed;
+    var $confirmRemoval; //modal to confirm removal of address
+    var $searchAddressInput; //the search field which filters addresses
+    var $addressRecords; //holds all addresses
+    var $modalAddEntry; //modal with the form that adds entries
+    var $addEntryConfirmed; 
+
+    //INDEXDB VARS AND CONSTANTS
+    const DB_NAME = 'digital-pulp';
+    const DB_VERSION = 1; // Use a long long for this value (don't use a float)
+    const DB_STORE_NAME = 'address-book';
+    var db;
+    var current_view_address_key; // Used to keep track of which view is displayed to avoid to uselessly reload it
+
+    $(document).ready(function(){
+
+      setDomReferences();
+      openDb();
+
+      $('#new_entry').click(function(){
+        addEntryClick();
+      });
+
+      $('.icon_minus').click(function(){
+        var $thisAddress = $(this).parent('.address_record');
+        removeEntryClick($thisAddress);
+      });
+
+      $searchAddressInput.keyup(function() {
+        var a = $(this).val();
+        if (a.length > 2) {
+
+          var containing = $addressRecords.find('.address_record').filter(function () {
+            var regex = new RegExp('\\b' + a, 'i');
+            return regex.test($('.address_name', this).text());
+          });
+          console.log(containing);
+          $('.address_record').not(containing).hide();
+        } else {
+          $('.address_record').show();
+        }
+        return false;
+      });
+
+    });
+
+    function setDomReferences(){ //called on document ready
+      $removeRecordConfirmed = $('#removeRecordConfirmed');
+      $confirmRemoval = $('#confirmRemoval');
+      $searchAddressInput = $('#searchAddressInput');
+      $addressRecords = $('#addressRecords');
+      $modalAddEntry = $('#modalAddEntry');
+      $addEntryConfirmed = $('#addEntryConfirmed');
+    }
+
+    function removeEntryClick($thisRecord){ //called when a minus sign is clicked
+      $activeRecord = $thisRecord;
+      $confirmRemoval.modal();
+      $removeRecordConfirmed.on('click', function(event){
+        $confirmRemoval.modal('hide');
+        $removeRecordConfirmed.off();
+        $thisRecord.remove();
+      });
+    }
+
+    function addEntryClick(){
+      $modalAddEntry.modal();
+      $addEntryConfirmed.on('click', function(event){
+        $modalAddEntry.modal('hide');
+        $addEntryConfirmed.off();
+        getFormValues();
+        //MH - the functionality to add the record
+      });
+    }
+
+    function getFormValues(){
+      var name = $('#entry-name').val();
+      var address = $('#entry-address').val();
+      var phone = $('#entry-phone').val();
+      addEntry(address, name, phone);
+    }
+
+  //INDEXDB FUNCTIONALITY
+
+  function openDb() { //called on docready
+    console.log("openDb ...");
+    var req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onsuccess = function (evt) {
+      // Better use "this" than "req" to get the result to avoid problems with
+      // garbage collection.
+      // db = req.result;
+      db = this.result;
+      console.log("openDb DONE");
+    };
+    req.onerror = function (evt) {
+      console.error("openDb:", evt.target.errorCode);
+    };
+
+    req.onupgradeneeded = function (evt) {
+      console.log("openDb.onupgradeneeded");
+      var store = evt.currentTarget.result.createObjectStore(
+        DB_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+
+      store.createIndex('name', 'name', { unique: true });
+      store.createIndex('address', 'address', { unique: false });
+      store.createIndex('phone', 'phone', { unique: false });
+    };
+  }
+
+  /**
+   * @param {string} store_name
+   * @param {string} mode either "readonly" or "readwrite"
+   */
+  function getObjectStore(store_name, mode) {
+    var tx = db.transaction(store_name, mode);
+    return tx.objectStore(store_name);
+  }
+
+  function getBlob(key, store, success_callback) {
+    var req = store.get(key);
+    req.onsuccess = function(evt) {
+      var value = evt.target.result;
+      if (value)
+        success_callback(value.blob);
+    };
+  }
+
+  /**
+   * @param {IDBObjectStore=} store
+   */
+  function displayAddressList(store) {
+    console.log("displayAddressList");
+
+    if (typeof store == 'undefined'){
+      store = getObjectStore(DB_STORE_NAME, 'readonly');
+    }
+      
+    var $address_list = $('#addressRecords');
+    //address_list.empty();
+
+    var req;
+    req = store.count();
+    // Requests are executed in the order in which they were made against the
+    // transaction, and their results are returned in the same order.
+    // Thus the count text below will be displayed before the actual address list
+    // (not that it is algorithmically important in this case).
+    req.onsuccess = function(evt) {
+      //SUCCESS MESSAGE
+    };
+    req.onerror = function(evt) {
+      console.error("add error", this.error);
+      displayActionFailure(this.error);
+    };
+
+    var i = 0;
+    req = store.openCursor();
+    req.onsuccess = function(evt) {
+      var cursor = evt.target.result;
+
+      // If the cursor is pointing at something, ask for the data
+      if (cursor) {
+        console.log("displayAddressList cursor:", cursor);
+        req = store.get(cursor.key);
+        req.onsuccess = function (evt) {
+          var value = evt.target.result;
+          
+
+          var $newEntry = $('<div class="address_record clearfix">');
+          var $entry_name = '<h3 class="address_name">' + value.name + '</h3>';
+
+          $newEntry.append($entry_name);
+          var $entry_details = 
+          '<div class="span4"><dl class="dl-horizontal"><dt>Address</dt><dd><address>' + value.address + '</address></dd></dl><dl class="dl-horizontal"><dt>Phone</dt><dd>' + value.phone + '</dd></dl></div>';
+          $newEntry.append($entry_details);
+          $address_list.append($newEntry);
+        };
+
+        // Move on to the next object in store
+        cursor.continue();
+
+        // This counter serves only to create distinct ids
+        i++;
+      } else {
+        console.log("No more entries");
+      }
+    };
+  }
+
+  
+  function addEntry(address, name, phone) {
+    console.log("addEntry arguments:", arguments);
+    var obj = { address: address, name: name, phone: phone };
+    if (typeof blob != 'undefined')
+      obj.blob = blob;
+
+    var store = getObjectStore(DB_STORE_NAME, 'readwrite');
+    var req;
+    try {
+      req = store.add(obj);
+    } catch (e) {
+      if (e.name == 'DataCloneError')
+        console.log("This engine doesn't know how to clone a Blob, " +
+                             "use Firefox");
+      throw e;
+    }
+    req.onsuccess = function (evt) {
+      console.log("Insertion in DB successful");
+      displayAddressList(store);
+    };
+    req.onerror = function() {
+      console.error("addEntry error", this.error);
+    };
+  }
+    </script>
+  </body>
+</html>

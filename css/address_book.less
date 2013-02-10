@@ -1,0 +1,26 @@
+/* REUSABLE STYLES */
+.border_radius (@radius:10px) { -webkit-border-radius: @radius; -moz-border-radius: @radius; border-radius: @radius; }
+/*.gradient (@direction:top,@from:#000,@to:#fff){ background: -webkit-gradient(linear, left @direction, left @direction, from(@from), to(@to)); background: -moz-linear-gradient(@direction, @from, @to); background: -o-linear-gradient(@direction, @from, @to); background: linear-gradient(@direction, @from, @to); } */
+
+
+.container { 
+  .address_record {
+    .edit { position: absolute; right:15px; top:15px; visibility: hidden; }
+    border-bottom: 1px solid #ccc; padding-bottom: 10px; position: relative;
+    .icon_minus { position:absolute; margin-left: 5px; margin-top:20px; visibility:hidden; display: block; .border_radius(10px); background: #f53434; line-height:18px; font-size: 19px; height: 20px; width: 20px; color: #fff; vertical-align: center; text-align:center; text-decoration: none; }
+    .icon_minus:hover { background: #db0909; color: #fff; text-decoration: none; }
+    .dl-horizontal dt.address_name_icon { width:20px; }
+    .dl-horizontal dd.address_name_definition { margin-left: 30px }
+    .address_name { margin-left: 30px; }
+  }
+  .address_record:hover {
+    background: #f9f9f9;
+    .icon_minus, .edit { visibility: visible; }
+  }
+  .pagination {
+    margin-top:30px; 
+    .new_entry { float: left; }
+    .pages { margin-top:7px; float:right; }
+  }
+}
+

@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+
+            </head>
+    <body>
+                    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>    
+
+
+    <div id="msg">
+    </div>
+
+    <form id="register-form">
+      <label for="entry-name" class="required">Name:</label>
+      <input type="text" id="entry-name" name="entry-name" /><br/>
+      
+      <label for="entry-address" class="required">Address:</label>
+      <input type="text" id="entry-address" name="entry-address"/><br/>
+      
+      <label for="entry-phone">Phone:</label>
+      <input type="text" id="entry-phone" name="entry-phone" />
+
+      <div class="button-pane">
+        <input type="button" id="add-button" value="Add Entry" />
+        <input type="reset" id="register-form-reset"/>
+      </div>
+    </form>
+
+    <div>
+      <ul id="address-list">
+      </ul>
+    </div>
+
+
+<script type="text/javascript">
+(function () {
+
+  const DB_NAME = 'digital-pulp';
+  const DB_VERSION = 1; // Use a long long for this value (don't use a float)
+  const DB_STORE_NAME = 'address-book';
+
+  var db;
+  // Used to keep track of which view is displayed to avoid to uselessly reload it
+  var current_view_address_key;
+
+  function openDb() {
+    console.log("openDb ...");
+    var req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onsuccess = function (evt) {
+      // Better use "this" than "req" to get the result to avoid problems with
+      // garbage collection.
+      // db = req.result;
+      db = this.result;
+      console.log("openDb DONE");
+    };
+    req.onerror = function (evt) {
+      console.error("openDb:", evt.target.errorCode);
+    };
+
+    req.onupgradeneeded = function (evt) {
+      console.log("openDb.onupgradeneeded");
+      var store = evt.currentTarget.result.createObjectStore(
+        DB_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+
+      store.createIndex('name', 'name', { unique: true });
+      store.createIndex('address', 'address', { unique: false });
+      store.createIndex('phone', 'phone', { unique: false });
+    };
+  }
+
+  /**
+   * @param {string} store_name
+   * @param {string} mode either "readonly" or "readwrite"
+   */
+  function getObjectStore(store_name, mode) {
+    var tx = db.transaction(store_name, mode);
+    return tx.objectStore(store_name);
+  }
+
+  function getBlob(key, store, success_callback) {
+    var req = store.get(key);
+    req.onsuccess = function(evt) {
+      var value = evt.target.result;
+      if (value)
+        success_callback(value.blob);
+    };
+  }
+
+  /**
+   * @param {IDBObjectStore=} store
+   */
+  function displayAddressList(store) {
+    console.log("displayAddressList");
+
+    if (typeof store == 'undefined'){
+      store = getObjectStore(DB_STORE_NAME, 'readonly');
+    }
+      
+    var address_list = $('#address-list');
+    address_list.empty();
+
+    var req;
+    req = store.count();
+    // Requests are executed in the order in which they were made against the
+    // transaction, and their results are returned in the same order.
+    // Thus the count text below will be displayed before the actual address list
+    // (not that it is algorithmically important in this case).
+    req.onsuccess = function(evt) {
+      //SUCCESS MESSAGE
+    };
+    req.onerror = function(evt) {
+      console.error("add error", this.error);
+      displayActionFailure(this.error);
+    };
+
+    var i = 0;
+    req = store.openCursor();
+    req.onsuccess = function(evt) {
+      var cursor = evt.target.result;
+
+      // If the cursor is pointing at something, ask for the data
+      if (cursor) {
+        console.log("displayAddressList cursor:", cursor);
+        req = store.get(cursor.key);
+        req.onsuccess = function (evt) {
+          var value = evt.target.result;
+          var list_item = $('<li>' +
+                            '[' + cursor.key + '] ' +
+                            'Address: ' + value.name + ' ' +
+                            value.address +
+                            '</li>');
+          if (value.year != null)
+            list_item.append(' - ' + value.phone);
+
+          
+          address_list.append(list_item);
+        };
+
+        // Move on to the next object in store
+        cursor.continue();
+
+        // This counter serves only to create distinct ids
+        i++;
+      } else {
+        console.log("No more entries");
+      }
+    };
+  }
+
+  
+  function addEntry(address, name, phone) {
+    console.log("addEntry arguments:", arguments);
+    var obj = { address: address, name: name, phone: phone };
+    if (typeof blob != 'undefined')
+      obj.blob = blob;
+
+    var store = getObjectStore(DB_STORE_NAME, 'readwrite');
+    var req;
+    try {
+      req = store.add(obj);
+    } catch (e) {
+      if (e.name == 'DataCloneError')
+        displayActionFailure("This engine doesn't know how to clone a Blob, " +
+                             "use Firefox");
+      throw e;
+    }
+    req.onsuccess = function (evt) {
+      console.log("Insertion in DB successful");
+      displayActionSuccess();
+      displayAddressList(store);
+    };
+    req.onerror = function() {
+      console.error("addEntry error", this.error);
+      displayActionFailure(this.error);
+    };
+  }
+
+  /**
+   * @param {string} biblioid
+   */
+  function deleteEntryFromName(name) {
+    console.log("deleteEntry:", arguments);
+    var store = getObjectStore(DB_STORE_NAME, 'readwrite');
+    var req = store.index('name');
+    req.get(name).onsuccess = function(evt) {
+      if (typeof evt.target.result == 'undefined') {
+        displayActionFailure("No matching record found");
+        return;
+      }
+      deleteEntry(evt.target.result.id, store);
+    };
+    req.onerror = function (evt) {
+      console.error("deleteEntryFromName:", evt.target.errorCode);
+    };
+  }
+
+  /**
+   * @param {number} key
+   * @param {IDBObjectStore=} store
+   */
+  function deleteEntry(key, store) {
+    console.log("deleteEntry:", arguments);
+
+    if (typeof store == 'undefined')
+      store = getObjectStore(DB_STORE_NAME, 'readwrite');
+
+    // As per spec http://www.w3.org/TR/IndexedDB/#object-store-deletion-operation
+    // the result of the Object Store Deletion Operation algorithm is
+    // undefined, so it's not possible to know if some records were actually
+    // deleted by looking at the request result.
+    var req = store.get(key);
+    req.onsuccess = function(evt) {
+      var record = evt.target.result;
+      console.log("record:", record);
+      if (typeof record == 'undefined') {
+        displayActionFailure("No matching record found");
+        return;
+      }
+      // Warning: The exact same key used for creation needs to be passed for
+      // the deletion. If the key was a Number for creation, then it needs to
+      // be a Number for deletion.
+      req = store.delete(key);
+      req.onsuccess = function(evt) {
+        console.log("evt:", evt);
+        console.log("evt.target:", evt.target);
+        console.log("evt.target.result:", evt.target.result);
+        console.log("delete successful");
+        displayActionSuccess("Deletion successful");
+        displayAddressList(store);
+      };
+      req.onerror = function (evt) {
+        console.error("deleteEntry:", evt.target.errorCode);
+      };
+    };
+    req.onerror = function (evt) {
+      console.error("deleteEntry:", evt.target.errorCode);
+      };
+  }
+
+  function displayActionSuccess(msg) {
+    msg = typeof msg != 'undefined' ? "Success: " + msg : "Success";
+    $('#msg').html('<span class="action-success">' + msg + '</span>');
+  }
+  function displayActionFailure(msg) {
+    msg = typeof msg != 'undefined' ? "Failure: " + msg : "Failure";
+    $('#msg').html('<span class="action-failure">' + msg + '</span>');
+  }
+  function resetActionStatus() {
+    console.log("resetActionStatus ...");
+    $('#msg').empty();
+    console.log("resetActionStatus DONE");
+  }
+
+  function addEventListeners() {
+    console.log("addEventListeners");
+
+    $('#register-form-reset').click(function(evt) {
+      resetActionStatus();
+    });
+
+    $('#add-button').click(function(evt) {
+      console.log("add ...");
+      var name = $('#entry-name').val();
+      var address = $('#entry-address').val();
+      if (!name || !address) {
+        displayActionFailure("Required field(s) missing");
+        return;
+      }
+      var phone = $('#entry-phone').val();
+      addEntry(address, name, phone);
+
+    });
+
+    $('#delete-button').click(function(evt) {
+      console.log("delete ...");
+      var nameToDelete = $('#pub-biblioid-to-delete').val(); //MH - need to pass the entry name here
+      deleteEntryFromName(nameToDelete);
+      
+    });
+
+  }
+
+  openDb();
+  addEventListeners();
+
+})(); // Immediately-Invoked Function Expression (IIFE)
+            </script>
+            </body>
+</html>
